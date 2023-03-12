@@ -1,0 +1,17 @@
+{
+  "generic_internal": "Internal server error",
+  "generic_bad_request": "Bad request",
+  "generic_unauthorized": "Authorization failed",
+  "generic_unauthenticated": "Authentication failed",
+  "generic_resource_not_found": "Resource not found",
+  "generic_bad_gateway": "Something went wrong with external service",
+  "generic_validation_error": "Validation failed",
+  "generic_conflict": "Conflict",
+  "generic_gone": "Gone",
+  "generic_flood": "Flood. Try again {{after}}",
+  "user_exists": "User with {{user}} already exists",
+  "invalid_password": "Invalid password or email/phone",
+  "invalid_scope": "Invalid scope, scope {{scope}} was not registered for the client",
+  "invalid_client_id": "Invalid client id",
+  "client_not_found": "Client not found"
+}

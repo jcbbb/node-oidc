@@ -1,0 +1,26 @@
+import * as eta from "eta";
+import { promises as fs } from "fs";
+import path from "path";
+
+const file_exists = async (path) => {
+  return !!(await fs.stat(path).catch((_) => false));
+};
+
+eta.configure({
+  root: path.join(process.cwd(), "src/views"),
+  async: true
+});
+
+const render_file = async (templatePath, ...props) => {
+  try {
+    const ext = path.extname(templatePath);
+    templatePath = ext ? templatePath : templatePath + ".html";
+    const exists = await file_exists(path.join(process.cwd(), `src/views/${templatePath}`));
+    if (exists) return await eta.renderFileAsync(templatePath, ...props);
+  } catch (err) {
+    console.log(err);
+    return await eta.renderFileAsync("/500.html", ...props);
+  }
+};
+
+export { eta, render_file };

@@ -1,0 +1,7 @@
+<% if (it.flash?.err?.length || it.flash?.info?.length || it.flash?.success?.length) { %>
+  <% it.flash?.err?.forEach(function (error) { %>
+    <div class="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+      <%= error.message %>
+    </div>
+  <% })%>
+<% } %>

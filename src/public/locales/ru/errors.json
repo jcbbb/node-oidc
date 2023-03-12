@@ -1,0 +1,17 @@
+{
+  "generic_internal": "Внутренная сервеная ошибка",
+  "generic_bad_request": "Неверный запрос",
+  "generic_unauthorized": "Авторизация не удалась",
+  "generic_unauthenticated": "Ошибка аутентификации",
+  "generic_resource_not_found": "Ресурс не найден",
+  "generic_bad_gateway": "Что-то пошло не так с внешним сервисом",
+  "generic_validation_error": "Проверка не удалась",
+  "generic_conflict": "Конфликт",
+  "generic_gone": "Истек",
+  "generic_flood": "Слишком много запросов. Попробуйте позже {{after}}",
+  "user_exists": "Пользователь с {{user}} уже существует",
+  "invalid_password": "Неверный пароль или почта/номер телефона",
+  "invalid_scope": "Неверный `scope`, {{scope}} не был зарегистрирован для клиента",
+  "invalid_client_id": "Неверный идентификатор клиента",
+  "client_not_found": "Клиент не найден"
+}
