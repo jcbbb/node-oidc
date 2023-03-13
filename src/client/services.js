@@ -20,8 +20,26 @@ export async function get_client(id) {
   return [result.rows[0], null]
 }
 
+export async function is_valid_client_scope(scope = "", client_id) {
+  let scopes_arr = scope.split(" ").filter(Boolean);
+  let [result, err] = await option(pool.query("select count(1)::int from client_scopes where scope_key = any($1) and client_id = $2", [scopes_arr, client_id]));
+
+  if (err) {
+    return [false, new InternalError()]
+  }
+
+  console.log({ scopes_arr });
+  let is_valid = result.rows[0].count === scopes_arr.length;
+
+  if (!is_valid) {
+    return [false, new BadRequestError({ key: "invalid_scope", params: { scope } })]
+  }
+
+  return [is_valid, null]
+}
+
 export async function get_client_scopes(id) {
-  let [result, err] = await option(pool.query("select key, icon_uri, description from client_scopes cs join scope_translations st on st.scope_id = cs.scope_id join scopes s on s.id = cs.scope_id where cs.client_id = $1 and lang = 'en'", [id]))
+  let [result, err] = await option(pool.query("select key, icon_uri, description, sensitive from client_scopes cs join scope_translations st on st.scope_key = cs.scope_key join scopes s on s.key = cs.scope_key where cs.client_id = $1 and lang = 'en'", [id]))
 
   if (err) {
     return [null, new InternalError()]
@@ -30,7 +48,14 @@ export async function get_client_scopes(id) {
   return [result.rows, null]
 }
 
-export function get_valid_client_scopes(scope, client_scopes) {
+export async function get_valid_client_scopes(scope, client_id) {
+  let [client_scopes, err] = await get_client_scopes(client_id);
+
+  if (err) {
+    return [null, err]
+  }
+
+  if (!scope) return [client_scopes, null];
   let scopes_arr = scope.split(" ");
   let valid_scopes = [];
 
@@ -45,4 +70,39 @@ export function get_valid_client_scopes(scope, client_scopes) {
   }
 
   return [valid_scopes, null]
+}
+
+export async function is_valid_response_type(response_type, client_id) {
+  let [result, err] = await option(pool.query("select * from client_response_types where client_id = $1", [client_id]));
+
+  if (err) {
+    return new InternalError()
+  }
+
+  let is_valid = result.rows.some((row) => row.response_type === response_type);
+  if (!is_valid) {
+    return new BadRequestError({ key: "invalid_response_type" })
+  }
+
+  return null
+}
+
+export async function get_valid_redirect_uri(redirect_uri, client_id) {
+  let [result, err] = await option(pool.query("select * from client_redirect_uris where client_id = $1", [client_id]))
+
+  if (err) {
+    return [null, new InternalError()]
+  }
+
+  if (!redirect_uri) {
+    return [result.rows[0].uri, null]
+  }
+
+  let is_valid = result.rows.some((row) => row.uri === redirect_uri);
+
+  if (!is_valid) {
+    return [null, new BadRequestError({ key: "invalid_redirect_uri" })]
+  }
+
+  return [redirect_uri, null]
 }

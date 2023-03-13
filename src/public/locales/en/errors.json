@@ -13,5 +13,9 @@
   "invalid_password": "Invalid password or email/phone",
   "invalid_scope": "Invalid scope, scope {{scope}} was not registered for the client",
   "invalid_client_id": "Invalid client id",
-  "client_not_found": "Client not found"
+  "client_not_found": "Client not found",
+  "invalid_response_type": "Invalid response type",
+  "user_not_found": "User with {{identifier}} not found",
+  "invalid_redirect_uri": "Invalid redirect uri",
+  "missing_code_challenge": "Missing code challenge"
 }

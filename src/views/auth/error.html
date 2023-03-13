@@ -3,6 +3,13 @@
   <div class="max-w-md mx-auto rounded-md bg-white p-6 space-y-6 w-full">
     <div class="bg-red-50 text-red-600 p-3 rounded-md text-sm">
       <%= it.err.message %>
+      <% if (it.err.errors) {%>
+      <ul>
+        <% it.err.errors.forEach(function (err) {%>
+          <li><%= err.message %></li>
+        <% }) %>
+      </ul>
+      <% } %>
     </div>
   </div>
 </div>

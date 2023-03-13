@@ -13,5 +13,9 @@
   "invalid_password": "Неверный пароль или почта/номер телефона",
   "invalid_scope": "Неверный `scope`, {{scope}} не был зарегистрирован для клиента",
   "invalid_client_id": "Неверный идентификатор клиента",
-  "client_not_found": "Клиент не найден"
+  "client_not_found": "Клиент не найден",
+  "invalid_response_type": "Недопустимый тип ответа",
+  "user_not_found": "Пользователь с {{identifier}} не найден",
+  "invalid_redirect_uri": "Неверный URI перенаправления",
+  "missing_code_challenge": "Отсутствует кодовое задание"
 }

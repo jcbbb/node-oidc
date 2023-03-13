@@ -16,12 +16,25 @@ export class DomainError extends Error {
   }
 
   b64(t) {
+    let translated_errors = this.errors;
+    if (Array.isArray(this.errors)) {
+      translated_errors = this.errors.map((err) => ({
+        message: t(err.message, { ns: "errors", ...this.params }),
+      }));
+    } else {
+      for (const key in this.errors) {
+        translated_errors[key] = t(this.errors[key], { ns: "errors", ...this.params });
+      }
+    }
+
     return Buffer.from(JSON.stringify({
       message: t(this.key, { ns: "errors", ...this.params }),
       status_code: this.status_code,
-      name: this.name
-    })).toString("base64")
+      name: this.name,
+      errors: translated_errors
+    })).toString("base64url")
   }
+
   build(t) {
     let translated_errors = this.errors;
     if (Array.isArray(this.errors)) {

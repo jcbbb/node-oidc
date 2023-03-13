@@ -8,10 +8,11 @@
     <%~ await includeFile('../flash.html', it) %>
     <% if (it.users?.length) { %>
     <ul>
-      <% it.users.forEach(function (user) { %>
+      <% it.users.forEach(function (user, idx) { %>
         <li>
           <form method="post">
-            <input type="hidden" name="user_id" value="<%= user.id %>" />
+            <input type="hidden" name="uidx" value="<%= idx %>" />
+            <input type="hidden" name="redirect_uri" value="<%= it.valid_redirect_uri %>" />
             <button type="submit" class="w-full flex items-center p-2 space-x-2 hover:bg-yellow-50 duration-200 rounded-md overflow-hidden">
               <div class="w-8 h-8">
                 <img src="<%= user.picture %>" alt="" class="flex-shrink-0 w-full rounded-full object-cover" />

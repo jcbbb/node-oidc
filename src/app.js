@@ -7,6 +7,7 @@ import flash from "@fastify/flash";
 import fsession from "@fastify/secure-session";
 import formbody from "@fastify/formbody";
 import i18n_http_middleware from "i18next-http-middleware";
+import ajv_errors from "ajv-errors";
 import { auth_routes } from "./auth/routes.js";
 import { i18next } from "./utils/i18n.js";
 import { eta } from "./utils/eta.js";
@@ -16,6 +17,10 @@ export async function start() {
     maxParamLength: 1000,
     logger: true,
     trustProxy: true,
+    ajv: {
+      customOptions: { allErrors: true, messages: true, useDefaults: true },
+      plugins: [ajv_errors],
+    },
   });
 
   try {
@@ -45,10 +50,6 @@ export async function start() {
       viewExt: "html",
       propertyName: "render",
     });
-
-    app.get("/", (req, reply) => {
-      console.log(req.session);
-    })
 
     app.register(fstatic, {
       root: path.join(process.cwd(), "src/public"),

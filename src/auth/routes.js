@@ -1,4 +1,15 @@
-import { handle_signup_view, handle_login_view, handle_consent_view, handle_error_view, handle_signup, handle_login } from "./handlers.js";
+import {
+  handle_signup_view,
+  handle_login_view,
+  handle_consent_view,
+  handle_error_view,
+  handle_signup,
+  handle_login,
+  handle_consent,
+  handle_token,
+  handle_get_jwks
+} from "./handlers.js";
+import { auth_schema } from "./schema.js";
 
 export let auth_routes = (fastify, _, done) => {
   fastify.route({
@@ -17,21 +28,37 @@ export let auth_routes = (fastify, _, done) => {
     handler: handle_login_view,
   });
   fastify.route({
-    method: "GET",
+    method: "POST",
     url: "/sessions",
     handler: handle_login,
   });
-
   fastify.route({
     method: "GET",
     url: "/oauth/authorize",
     handler: handle_consent_view,
+    schema: auth_schema.consent_view,
+    attachValidation: true,
   });
-
+  fastify.route({
+    method: "POST",
+    url: "/oauth/authorize",
+    handler: handle_consent,
+  });
   fastify.route({
     method: "GET",
     url: "/oauth/error",
     handler: handle_error_view,
+  });
+
+  fastify.route({
+    method: "POST",
+    url: "/oauth/token",
+    handler: handle_token,
+  });
+  fastify.route({
+    method: "GET",
+    url: "/oauth/jwks",
+    handler: handle_get_jwks,
   });
 
   done();

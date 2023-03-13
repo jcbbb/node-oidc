@@ -2,11 +2,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-let PORT = parseInt(process.env.PORT, 10);
-let PORT_DEV = parseInt(process.env.PORT_DEV, 10);
-let PORT_STAGING = parseInt(process.env.PORT_STAGING, 10);
+export let PORT = parseInt(process.env.PORT, 10);
+export let PORT_DEV = parseInt(process.env.PORT_DEV, 10);
+export let PORT_STAGING = parseInt(process.env.PORT_STAGING, 10);
+export let ACCESS_TOKEN_EXP = parseInt(process.env.ACCESS_TOKEN_EXP, 10);
+export let ID_TOKEN_EXP = parseInt(process.env.ID_TOKEN_EXP, 10);
 
-export { PORT, PORT_DEV, PORT_STAGING };
 export let {
   NODE_ENV = "development",
   POSTGRES_URI,
@@ -15,5 +16,9 @@ export let {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_NAME_STAGING,
   SESSION_COOKIE_NAME_DEV,
-  SESSION_COOKIE_SECRET
+  SESSION_COOKIE_SECRET,
+  JWKS_FILE_NAME,
+  ISSUER,
+  ISSUER_DEV,
+  ISSUER_STAGING
 } = process.env;

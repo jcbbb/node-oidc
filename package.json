@@ -20,6 +20,7 @@
     "@fastify/secure-session": "^6.0.0",
     "@fastify/static": "^6.9.0",
     "@fastify/view": "^7.4.1",
+    "ajv-errors": "^3.0.0",
     "argon2": "^0.30.3",
     "dotenv": "^16.0.3",
     "eta": "^2.0.1",
@@ -28,6 +29,7 @@
     "i18next": "^22.4.11",
     "i18next-fs-backend": "^2.1.1",
     "i18next-http-middleware": "^3.3.0",
+    "node-jose": "^2.2.0",
     "pg": "^8.10.0"
   },
   "devDependencies": {
