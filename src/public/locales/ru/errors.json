@@ -17,5 +17,6 @@
   "invalid_response_type": "Недопустимый тип ответа",
   "user_not_found": "Пользователь с {{identifier}} не найден",
   "invalid_redirect_uri": "Неверный URI перенаправления",
-  "missing_code_challenge": "Отсутствует кодовое задание"
+  "missing_code_challenge": "Отсутствует кодовое задание",
+  "auth_req_expired_used": "Запрос на авторизацию просрочен или уже использован. Пожалуйста, запросите другую авторизацию"
 }

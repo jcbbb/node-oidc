@@ -17,5 +17,6 @@
   "invalid_response_type": "Invalid response type",
   "user_not_found": "User with {{identifier}} not found",
   "invalid_redirect_uri": "Invalid redirect uri",
-  "missing_code_challenge": "Missing code challenge"
+  "missing_code_challenge": "Missing code challenge",
+  "auth_req_expired_used": "Authorization request expired or already used. Please request another authorization"
 }

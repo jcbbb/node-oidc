@@ -81,17 +81,22 @@ CREATE TABLE "authorization_requests" (
   "user_id" integer NOT NULL,
   "created_at" timestamp with time zone DEFAULT NOW() NOT NULL,
   "expires_at" timestamp with time zone NOT NULL,
+  "used" boolean DEFAULT FALSE,
   CONSTRAINT "authorization_requests_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "refresh_tokens" (
+CREATE TABLE "tokens" (
   "id" uuid DEFAULT gen_random_uuid () NOT NULL,
   "sub" integer NOT NULL,
-  "authorization_request_id" integer,
+  "aud" varchar(255) NOT NULL,
   "client_id" uuid NOT NULL,
+  "scope" text,
+  "authorization_request_id" integer,
+  "refresh_token" uuid DEFAULT gen_random_uuid () NOT NULL,
   "created_at" timestamp with time zone DEFAULT NOW() NOT NULL,
-  "expires_at" timestamp with time zone NOT NULL,
-  CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
+  "iat" timestamp with time zone DEFAULT now() NOT NULL,
+  "exp" timestamp with time zone NOT NULL,
+  CONSTRAINT "tokens_pkey" PRIMARY KEY ("id")
 );
 
 CREATE TABLE "client_scopes" (
@@ -109,6 +114,12 @@ CREATE TABLE "client_response_types" (
   response_type varchar(255) NOT NULL
 );
 
+ALTER TABLE "tokens"
+  ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
+
+ALTER TABLE "tokens"
+  ADD CONSTRAINT "fk_authorization_request" FOREIGN KEY ("authorization_request_id") REFERENCES "authorization_requests" ("id") ON UPDATE NO action ON DELETE CASCADE;
+
 ALTER TABLE "client_redirect_uris"
   ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
 
@@ -117,12 +128,6 @@ ALTER TABLE "authorization_requests"
 
 ALTER TABLE "scope_translations"
   ADD CONSTRAINT "fk_scope" FOREIGN KEY ("scope_key") REFERENCES "scopes" ("key") ON UPDATE NO action ON DELETE CASCADE;
-
-ALTER TABLE "refresh_tokens"
-  ADD CONSTRAINT "fk_authorization_request" FOREIGN KEY ("authorization_request_id") REFERENCES "authorization_requests" ("id") ON UPDATE NO action ON DELETE CASCADE;
-
-ALTER TABLE "refresh_tokens"
-  ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
 
 ALTER TABLE "sessions"
   ADD CONSTRAINT "fk_user" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE;
@@ -135,7 +140,9 @@ ALTER TABLE "client_scopes"
 
 CREATE INDEX "idx_sessions_user_id" ON sessions ("user_id");
 
-CREATE UNIQUE INDEX "uidx_authorization_requests_code_redirecturi_clientid" ON "authorization_requests" ("code", "redirect_uri", "client_id");
+CREATE INDEX "tokens_authorization_request_id" ON "tokens" ("authorization_request_id");
+
+CREATE UNIQUE INDEX "uidx_authorization_requests_code_redirecturi_clientid_used" ON "authorization_requests" ("code", "redirect_uri", "client_id", "used");
 
 CREATE UNIQUE INDEX "uidx_users_email" ON users ("email");
 

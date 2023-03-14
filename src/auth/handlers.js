@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import jose from "node-jose";
 import config from "../config/index.js";
+import { option } from "../utils/index.js";
 import { get_client, get_valid_client_scopes, get_valid_redirect_uri, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
-import { get_auth_req, insert_auth_req, insert_session, verify_credentials } from "./services.js";
-import { get_by_id, get_users_by_ids, insert_user } from "../user/services.js";
+import { gen_id_token, gen_tokens, get_auth_req, insert_auth_req, insert_session, update_auth_req, verify_credentials } from "./services.js";
+import { get_users_by_ids, insert_user } from "../user/services.js";
 import { ValidationError } from "../utils/errors.js";
 
 export async function handle_signup_view(req, reply) {
@@ -182,42 +183,42 @@ export async function handle_consent(req, reply) {
 }
 
 export async function handle_token(req, reply) {
+  let t = req.t;
   let { grant_type, code, redirect_uri, code_verifier, client_id } = req.body;
 
   let [auth_req, err] = await get_auth_req({ client_id, code, redirect_uri });
-
-  let [user, uerr] = await get_by_id(auth_req.user_id);
+  if (err) {
+    return err.build(t);
+  }
 
   let ks = fs.readFileSync(path.join(process.cwd(), config.jwks_file_name));
   let keystore = await jose.JWK.asKeyStore(ks.toString());
   let [key] = keystore.all({ use: 'sig' });
 
-  let id_opt = { compact: true, jwk: key, fields: { typ: "jwt" } };
-  let id_token_payload = {
-    iss: config.issuer,
-    sub: user.id,
-    aud: auth_req.client_id,
-    exp: Date.now() / 1000 + config.id_token_exp,
-    iat: Date.now() / 1000,
-    auth_time: new Date(auth_req.created_at).getTime() / 1000
-  };
+  let [id_token, iterr] = await gen_id_token(auth_req, key);
+  if (iterr) {
+    return iterr.build(t);
+  }
 
-  let id_token = await jose.JWS.createSign(id_opt, key).update(JSON.stringify(id_token_payload)).final();
+  let [tokens, aterr] = await gen_tokens(auth_req, key);
+  if (aterr) {
+    return aterr.build(t);
+  }
 
-  let at_opt = { compact: true, jwk: key, fields: { typ: "at+jwt" } };
-  let at_payload = {
-    iss: config.issuer,
-    sub: user.id,
-    aud: auth_req.client_id,
-    exp: (Date.now() / 1000) + config.access_token_exp,
-    client_id: auth_req.client_id,
-    iat: Date.now() / 1000,
-    scope: auth_req.scope,
-  };
+  let [_, uperr] = await option(update_auth_req(auth_req.id, { used: true }));
 
-  let access_token = await jose.JWS.createSign(at_opt, key).update(JSON.stringify(at_payload)).final();
+  if (uperr) {
+    return uperr.build(t);
+  }
 
-  reply.send({ id_token, access_token, token_type: "Bearer", expires_in: config.access_token_exp, scope: auth_req.scope });
+  reply.send({
+    id_token,
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    token_type: "Bearer",
+    expires_in: config.access_token_exp,
+    scope: auth_req.scope
+  });
   return reply;
 }
 
