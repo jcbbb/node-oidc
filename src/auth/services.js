@@ -5,7 +5,7 @@ import { hash } from "argon2";
 import { option } from "../utils/index.js";
 import { get_user_by_email, get_user_by_id, get_user_by_phone } from "../user/services.js";
 import { BadRequestError, InternalError, ResourceNotFoundError } from "../utils/errors.js";
-import { randomInt, createHash, randomBytes } from "crypto";
+import { randomInt, createHash } from "crypto";
 
 export async function insert_session(user_id, remote_addr) {
   let expires_at = new Date();
@@ -189,21 +189,3 @@ export async function verify_code_challenge(auth_req, code_verifier) {
 
   return [false, new BadRequestError({ key: "invalid_code_verifier" })];
 }
-
-// let code_challenge = createHash("sha256").update(rand).digest("base64url");
-// let code_verifier = Buffer.from(rand).toString("base64url");
-// console.log({ code_challenge, code_verifier });
-// let bytes = randomBytes(32);
-// let code_challenge = createHash("sha256").update(bytes).digest("base64url");
-// let verifier = Buffer.from(bytes).toString("base64url");
-// console.log({ code_challenge, verifier });
-// let str = Buffer.from(verifier, "base64url");
-// let h = createHash("sha256").update(str).digest("base64url");
-// console.log({ h });
-
-// rand.Read(b)
-// h := sha256.New()
-// h.Write(b)
-// bs := base64.URLEncoding.EncodeToString(h.Sum(nil))
-// verifier := base64.URLEncoding.EncodeToString(b)
-// fmt.Printf("CODE CHALLENGE %+v\n", bs)
