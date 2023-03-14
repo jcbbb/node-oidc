@@ -4,7 +4,7 @@ import jose from "node-jose";
 import config from "../config/index.js";
 import { option } from "../utils/index.js";
 import { get_client, get_valid_client_scopes, get_valid_redirect_uri, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
-import { gen_id_token, gen_tokens, get_auth_req, insert_auth_req, insert_session, update_auth_req, verify_credentials } from "./services.js";
+import { gen_id_token, gen_tokens, get_auth_req, insert_auth_req, insert_session, update_auth_req, verify_code_challenge, verify_credentials } from "./services.js";
 import { get_users_by_ids, insert_user } from "../user/services.js";
 import { ValidationError } from "../utils/errors.js";
 
@@ -189,6 +189,11 @@ export async function handle_token(req, reply) {
   let [auth_req, err] = await get_auth_req({ client_id, code, redirect_uri });
   if (err) {
     return err.build(t);
+  }
+
+  let [valid, verr] = await verify_code_challenge(auth_req, code_verifier);
+  if (verr) {
+    return verr.build(t);
   }
 
   let ks = fs.readFileSync(path.join(process.cwd(), config.jwks_file_name));

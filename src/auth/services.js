@@ -3,9 +3,9 @@ import jose from "node-jose";
 import { pool } from "../db/pool.js";
 import { hash } from "argon2";
 import { option } from "../utils/index.js";
-import { get_by_email, get_by_id, get_by_phone } from "../user/services.js";
+import { get_user_by_email, get_user_by_id, get_user_by_phone } from "../user/services.js";
 import { BadRequestError, InternalError, ResourceNotFoundError } from "../utils/errors.js";
-import { randomInt } from "crypto";
+import { randomInt, createHash, randomBytes } from "crypto";
 
 export async function insert_session(user_id, remote_addr) {
   let expires_at = new Date();
@@ -107,7 +107,7 @@ export async function gen_tokens(auth_req, key) {
 }
 
 export async function gen_id_token(auth_req, key) {
-  let [user, uerr] = await get_by_id(auth_req.user_id);
+  let [user, uerr] = await get_user_by_id(auth_req.user_id);
   if (uerr) {
     return [null, uerr];
   }
@@ -154,9 +154,9 @@ export async function verify_credentials({ email, phone, password } = {}) {
   let err;
 
   if (email.length) {
-    [user, err] = await get_by_email(email);
+    [user, err] = await get_user_by_email(email);
   } else {
-    [user, err] = await get_by_phone(phone);
+    [user, err] = await get_user_by_phone(phone);
   }
 
   if (err) {
@@ -171,3 +171,39 @@ export async function verify_credentials({ email, phone, password } = {}) {
 
   return [user, null];
 }
+
+export async function verify_code_challenge(auth_req, code_verifier) {
+  let valid = false;
+  if (auth_req.code_challenge_method === "plain") {
+    valid = code_verifier === auth_req.code_challenge;
+  }
+
+  if (auth_req.code_challenge_method === "S256") {
+    let hash = createHash("sha256").update(code_verifier).digest("base64url");
+    valid = hash === auth_req.code_challenge;
+  }
+
+  if (valid) {
+    return [valid, null];
+  }
+
+  return [false, new BadRequestError({ key: "invalid_code_verifier" })];
+}
+
+// let code_challenge = createHash("sha256").update(rand).digest("base64url");
+// let code_verifier = Buffer.from(rand).toString("base64url");
+// console.log({ code_challenge, code_verifier });
+// let bytes = randomBytes(32);
+// let code_challenge = createHash("sha256").update(bytes).digest("base64url");
+// let verifier = Buffer.from(bytes).toString("base64url");
+// console.log({ code_challenge, verifier });
+// let str = Buffer.from(verifier, "base64url");
+// let h = createHash("sha256").update(str).digest("base64url");
+// console.log({ h });
+
+// rand.Read(b)
+// h := sha256.New()
+// h.Write(b)
+// bs := base64.URLEncoding.EncodeToString(h.Sum(nil))
+// verifier := base64.URLEncoding.EncodeToString(b)
+// fmt.Printf("CODE CHALLENGE %+v\n", bs)

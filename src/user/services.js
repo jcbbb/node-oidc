@@ -23,7 +23,7 @@ export async function insert_user({ email, phone, password, first_name, last_nam
   return [result.rows[0].id, null];
 }
 
-export async function get_by_id(id) {
+export async function get_user_by_id(id) {
   let [result, err] = await option(pool.query("select * from users where id = $1", [id]));
 
   if (err) {
@@ -37,7 +37,7 @@ export async function get_by_id(id) {
   return [result.rows[0], null];
 }
 
-export async function get_by_email(email) {
+export async function get_user_by_email(email) {
   let [result, err] = await option(pool.query("select id, email, password from users where email = $1", [email]));
 
   if (err) {
@@ -52,7 +52,7 @@ export async function get_by_email(email) {
   return [result.rows[0], null];
 }
 
-export async function get_by_phone(phone) {
+export async function get_user_by_phone(phone) {
   let [result, err] = await option(pool.query("select id, phone, password from users where phone = $1", [phone]));
 
   if (err) {
