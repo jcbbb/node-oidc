@@ -1,6 +1,7 @@
 import i18next from "i18next";
 import i18n_http_middleware from "i18next-http-middleware";
 import i18n_backend from "i18next-fs-backend";
+import fp from "fastify-plugin";
 
 i18next
   .use(i18n_backend)
@@ -21,7 +22,20 @@ i18next
     saveMissing: true,
     cleanCode: true,
     lowerCaseLng: true,
-    order: ["header"],
+    detection: {
+      order: ["querystring", "cookie", "header"],
+      lookupQueryString: "lng",
+      lookupCookie: 'i18next',
+      lookupHeader: "accept-language",
+      lookupSession: 'lng',
+      lookupPath: 'lng'
+    }
   });
 
-export { i18next };
+let i18next_plugin = fp((instance, opts, next) => {
+  let handle = i18n_http_middleware.handle(i18next, opts);
+  instance.addHook("preValidation", (req, reply, next) => handle(req, reply, next));
+  next();
+});
+
+export { i18next, i18next_plugin };

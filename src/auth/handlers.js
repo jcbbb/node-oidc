@@ -3,7 +3,7 @@ import path from "path";
 import jose from "node-jose";
 import config from "../config/index.js";
 import { option } from "../utils/index.js";
-import { get_client, get_valid_client_scopes, get_valid_redirect_uri, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
+import { get_client, get_valid_client_scopes, get_valid_redirect_uri, get_verified_client, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
 import { gen_id_token, gen_tokens, get_auth_req, insert_auth_req, insert_session, update_auth_req, verify_code_challenge, verify_credentials } from "./services.js";
 import { get_users_by_ids, insert_user } from "../user/services.js";
 import { ValidationError } from "../utils/errors.js";
@@ -184,7 +184,12 @@ export async function handle_consent(req, reply) {
 
 export async function handle_token(req, reply) {
   let t = req.t;
-  let { grant_type, code, redirect_uri, code_verifier, client_id } = req.body;
+  let { grant_type, code, redirect_uri, code_verifier, client_id, client_secret } = req.body;
+
+  let [client, cerr] = await get_verified_client(client_id, client_secret, req.headers["authorization"]);
+  if (cerr) {
+    return cerr.build(t);
+  }
 
   let [auth_req, err] = await get_auth_req({ client_id, code, redirect_uri });
   if (err) {
@@ -210,7 +215,7 @@ export async function handle_token(req, reply) {
     return aterr.build(t);
   }
 
-  let [_, uperr] = await option(update_auth_req(auth_req.id, { used: true }));
+  let [_, uperr] = await update_auth_req(auth_req.id, { used: true });
 
   if (uperr) {
     return uperr.build(t);

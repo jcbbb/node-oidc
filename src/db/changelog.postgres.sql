@@ -50,6 +50,7 @@ CREATE TABLE "clients" (
   "token_endpoint_auth_method" varchar(255) NOT NULL CHECK (token_endpoint_auth_method IN ('client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt', 'none')) DEFAULT 'client_secret_basic',
   "created_at" timestamp with time zone DEFAULT NOW() NOT NULL,
   "active" boolean DEFAULT TRUE,
+  "type" varchar(255) NOT NULL CHECK (type IN ('confidential', 'public')) DEFAULT 'confidential',
   CONSTRAINT "clients_pkey" PRIMARY KEY ("id")
 );
 
@@ -137,6 +138,18 @@ ALTER TABLE "client_scopes"
 
 ALTER TABLE "client_scopes"
   ADD CONSTRAINT "fk_scope" FOREIGN KEY ("scope_key") REFERENCES "scopes" ("key") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE "client_grant_types"
+  ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE "client_grant_types"
+  ADD CONSTRAINT "fk_grant_type" FOREIGN KEY ("grant_type") REFERENCES "grant_types" ("value") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE "client_response_types"
+  ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE "client_response_types"
+  ADD CONSTRAINT "fk_response_type" FOREIGN KEY ("response_type") REFERENCES "response_types" ("value") ON UPDATE NO ACTION ON DELETE CASCADE;
 
 CREATE INDEX "idx_sessions_user_id" ON sessions ("user_id");
 

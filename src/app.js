@@ -6,11 +6,11 @@ import fstatic from "@fastify/static";
 import flash from "@fastify/flash";
 import fsession from "@fastify/secure-session";
 import formbody from "@fastify/formbody";
-import i18n_http_middleware from "i18next-http-middleware";
 import ajv_errors from "ajv-errors";
 import { auth_routes } from "./auth/routes.js";
-import { i18next } from "./utils/i18n.js";
+import { i18next_plugin } from "./utils/i18n.js";
 import { eta } from "./utils/eta.js";
+import { ValidationError } from "./utils/errors.js";
 
 export async function start() {
   let app = fastify({
@@ -24,9 +24,7 @@ export async function start() {
   });
 
   try {
-    app.register(i18n_http_middleware.plugin, {
-      i18next,
-    });
+    app.register(i18next_plugin);
 
     app.register(fsession, {
       secret: config.session_cookie_secret,
@@ -60,7 +58,15 @@ export async function start() {
       },
     });
 
-    app.register(auth_routes)
+    app.register(auth_routes);
+    app.setErrorHandler((err, req, reply) => {
+      let t = req.t;
+      if (err.validation) {
+        reply.code(422).send(new ValidationError({ errors: err.validation }).build(t));
+        return reply;
+      }
+      return err;
+    });
 
     await app.listen({ port: config.port });
   } catch (err) {
