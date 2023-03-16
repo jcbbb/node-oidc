@@ -18,6 +18,15 @@
   "user_not_found": "Пользователь с {{identifier}} не найден",
   "invalid_redirect_uri": "Неверный URI перенаправления",
   "missing_code_challenge": "Отсутствует кодовое задание",
+  "missing_grant_type": "Отсутствует тип гранта",
+  "missing_username": "Отсутствует имя пользователя",
+  "missing_password": "Отсутствует пароль",
+  "missing_redirect_uri": "Отсутствует URI перенаплавления",
+  "missing_auth_code": "Отсутствует код авторизации",
+  "missing_refresh_token": "Отсутствует токен обновления",
   "auth_req_expired_used": "Запрос на авторизацию просрочен или уже использован. Пожалуйста, запросите другую авторизацию",
-  "invalid_code_verifier": "Неверный верификатор кода"
+  "invalid_code_verifier": "Неверный верификатор кода",
+  "invalid_auth_method": "Недопустимый метод аутентификации, этот клиент настроен на использование аутентификации {{method}}",
+  "invalid_client_credentials": "Неверные учетные данные клиента",
+  "invalid_grant_type": "Недопустимый grant_type, используйте один из следующих: authorization_code, refresh_token"
 }

@@ -49,11 +49,11 @@ export let auth_routes = (fastify, _, done) => {
     url: "/oauth/error",
     handler: handle_error_view,
   });
-
   fastify.route({
     method: "POST",
     url: "/oauth/token",
     handler: handle_token,
+    schema: auth_schema.token,
   });
   fastify.route({
     method: "GET",

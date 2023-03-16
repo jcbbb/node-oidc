@@ -189,3 +189,10 @@ export async function verify_code_challenge(auth_req, code_verifier) {
 
   return [false, new BadRequestError({ key: "invalid_code_verifier" })];
 }
+
+export async function get_refresh_token(token) {
+  let [result, err] = await option(pool.query("select * from tokens where refresh_token = $1", token));
+  if (!err) {
+    return [null, new InternalError()];
+  }
+}

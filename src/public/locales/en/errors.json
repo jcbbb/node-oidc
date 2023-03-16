@@ -18,6 +18,18 @@
   "user_not_found": "User with {{identifier}} not found",
   "invalid_redirect_uri": "Invalid redirect uri",
   "missing_code_challenge": "Missing code challenge",
+  "missing_grant_type": "Missing grant type",
+  "missing_auth_code": "Missing authorization code",
+  "missing_redirect_uri": "Missing redirect uri",
+  "missing_code_verifier": "Missing code verifier",
+  "missing_username": "Missing username",
+  "missing_password": "Missing password",
+  "missing_redirect_uri": "Missing redirect uri",
+  "missing_auth_code": "Missing authorization code",
+  "missing_refresh_token": "Missing refresh token",
   "auth_req_expired_used": "Authorization request expired or already used. Please request another authorization",
-  "invalid_code_verifier": "Invalid code verifier"
+  "invalid_code_verifier": "Invalid code verifier",
+  "invalid_auth_method": "Invalid authentication method, this client is configured to use {{method}} authentication",
+  "invalid_client_credentials": "Invalid client credentials",
+  "invalid_grant_type": "Invalid grant_type, please use one of the following: authorization_code, refresh_token"
 }
