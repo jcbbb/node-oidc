@@ -86,14 +86,23 @@ CREATE TABLE "authorization_requests" (
   CONSTRAINT "authorization_requests_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "refresh_tokens" (
+  "id" uuid DEFAULT gen_random_uuid () NOT NULL,
+  "client_id" uuid NOT NULL,
+  "active" boolean DEFAULT TRUE,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "token_id" uuid NOT NULL,
+  "auth_req_id" integer NOT NULL,
+  CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
+);
+
 CREATE TABLE "tokens" (
   "id" uuid DEFAULT gen_random_uuid () NOT NULL,
   "sub" integer NOT NULL,
   "aud" varchar(255) NOT NULL,
   "client_id" uuid NOT NULL,
   "scope" text,
-  "authorization_request_id" integer,
-  "refresh_token" uuid DEFAULT gen_random_uuid () NOT NULL,
+  "auth_req_id" integer NOT NULL,
   "created_at" timestamp with time zone DEFAULT NOW() NOT NULL,
   "iat" timestamp with time zone DEFAULT now() NOT NULL,
   "exp" timestamp with time zone NOT NULL,
@@ -115,11 +124,20 @@ CREATE TABLE "client_response_types" (
   response_type varchar(255) NOT NULL
 );
 
+ALTER TABLE "refresh_tokens"
+  ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
+
+ALTER TABLE "refresh_tokens"
+  ADD CONSTRAINT "fk_token" FOREIGN KEY ("token_id") REFERENCES "tokens" ("id") ON UPDATE NO action ON DELETE CASCADE;
+
+ALTER TABLE "refresh_tokens"
+  ADD CONSTRAINT "fk_auth_req" FOREIGN KEY ("auth_req_id") REFERENCES "authorization_requests" ("id") ON UPDATE NO action ON DELETE CASCADE;
+
 ALTER TABLE "tokens"
   ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
 
 ALTER TABLE "tokens"
-  ADD CONSTRAINT "fk_authorization_request" FOREIGN KEY ("authorization_request_id") REFERENCES "authorization_requests" ("id") ON UPDATE NO action ON DELETE CASCADE;
+  ADD CONSTRAINT "fk_auth_req" FOREIGN KEY ("auth_req_id") REFERENCES "authorization_requests" ("id") ON UPDATE NO action ON DELETE CASCADE;
 
 ALTER TABLE "client_redirect_uris"
   ADD CONSTRAINT "fk_client" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON UPDATE NO action ON DELETE CASCADE;
@@ -153,7 +171,7 @@ ALTER TABLE "client_response_types"
 
 CREATE INDEX "idx_sessions_user_id" ON sessions ("user_id");
 
-CREATE INDEX "tokens_authorization_request_id" ON "tokens" ("authorization_request_id");
+CREATE INDEX "tokens_auth_req_id" ON "tokens" ("auth_req_id");
 
 CREATE UNIQUE INDEX "uidx_authorization_requests_code_redirecturi_clientid_used" ON "authorization_requests" ("code", "redirect_uri", "client_id", "used");
 

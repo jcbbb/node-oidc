@@ -79,11 +79,17 @@ export async function gen_tokens(auth_req, key) {
   let exp = new Date();
   exp.setSeconds(exp.getSeconds() + config.access_token_exp);
   let [result, err] = await option(pool.query(`insert into tokens
-                                              (sub, aud, scope, authorization_request_id, client_id, exp)
-                                              values ($1, $2, $3, $4, $5, $6) returning iat, refresh_token`,
+                                              (sub, aud, scope, auth_req_id, client_id, exp)
+                                              values ($1, $2, $3, $4, $5, $6) returning iat, id`,
                                               [auth_req.user_id, auth_req.client_id, auth_req.scope, auth_req.id, auth_req.client_id, exp]));
 
   if (err) {
+    return [null, new InternalError()];
+  }
+
+  let [ref, rerr] = await option(pool.query("insert into refresh_tokens (client_id, token_id, auth_req_id) values ($1, $2, $3) returning id", [auth_req.client_id, result.rows[0].id, auth_req.id ]));
+
+  if (rerr) {
     return [null, new InternalError()];
   }
 
@@ -97,13 +103,28 @@ export async function gen_tokens(auth_req, key) {
     scope: auth_req.scope
   };
 
-  let [access_token, aterr] = await sign_access_token(token, key);
+  let [access_token, aterr] = await sign_token(token, key);
 
   if (aterr) {
     return [null, aterr];
   }
 
-  return [{ access_token, refresh_token: result.rows[0].refresh_token }, null];
+  let ret = {
+    access_token,
+    refresh_token: ref.rows[0].id,
+  };
+
+  let scopes = auth_req.scope.split(" ");
+
+  if (scopes.includes("openid")) {
+    let [id_token, err] = await gen_id_token(auth_req, key);
+    if (err) {
+      return [null, err];
+    }
+    Object.assign(ret, { id_token });
+  }
+
+  return [ret, null];
 }
 
 export async function gen_id_token(auth_req, key) {
@@ -127,19 +148,17 @@ export async function gen_id_token(auth_req, key) {
     exp: Math.floor(Date.now() / 1000) + config.id_token_exp
   };
 
-  let opts = { compact: true, jwk: key, fields: { typ: "jwt" }};
-
-  let [result, err] = await option(jose.JWS.createSign(opts, key).update(JSON.stringify(token)).final());
+  let [id_token, err] = await sign_token(token, key, "jwt");
 
   if (err) {
-    return [null, new InternalError()];
+    return [null, err];
   }
 
-  return [result, null];
+  return [id_token, null];
 }
 
-async function sign_access_token(token, key) {
-  let opts = { compact: true, jwk: key, fields: { typ: "at+jwt" }};
+async function sign_token(token, key, typ = "at+jwt") {
+  let opts = { compact: true, jwk: key, fields: { typ }};
   let [result, err] = await option(jose.JWS.createSign(opts, key).update(JSON.stringify(token)).final());
 
   if (err) {
@@ -190,9 +209,15 @@ export async function verify_code_challenge(auth_req, code_verifier) {
   return [false, new BadRequestError({ key: "invalid_code_verifier" })];
 }
 
-export async function get_refresh_token(token) {
-  let [result, err] = await option(pool.query("select * from tokens where refresh_token = $1", token));
-  if (!err) {
+export async function get_refresh_token(id) {
+  let [ref, rerr] = await option(pool.query("select * from refresh_tokens where id = $1", id));
+  if (!rerr) {
+    return [null, new InternalError()];
+  }
+
+  let [token, err] = await option(pool.query("select * from tokes where id = $1", ref.rows[0].token_id));
+
+  if (err) {
     return [null, new InternalError()];
   }
 }

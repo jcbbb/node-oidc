@@ -191,43 +191,60 @@ export async function handle_token(req, reply) {
     return cerr.build(t);
   }
 
-  let [auth_req, err] = await get_auth_req({ client_id, code, redirect_uri });
-  if (err) {
-    return err.build(t);
+  switch (grant_type) {
+    case "authorization_code": {
+      let [auth_req, err] = await get_auth_req({ client_id: client.id, code, redirect_uri });
+      if (err) {
+        return err.build(t);
+      }
+
+      let [valid, verr] = await verify_code_challenge(auth_req, code_verifier);
+
+      if (verr) {
+        return verr.build(t);
+      }
+
+      let [key] = keystore.all({ use: "sig" });
+
+      let [tokens, aterr] = await gen_tokens(auth_req, key);
+      if (aterr) {
+        return aterr.build(t);
+      }
+
+      let [_, uperr] = await update_auth_req(auth_req.id, { used: true });
+
+      if (uperr) {
+        return uperr.build(t);
+      }
+
+      let resp = {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        token_type: "Bearer",
+        expires_in: config.access_token_exp,
+        scope: auth_req.scope
+      };
+
+      let scopes = auth_req.scope.split(" ");
+
+      if (scopes.includes("openid")) {
+        let [id_token, iterr] = await gen_id_token(auth_req, key);
+        if (iterr) {
+          return iterr.build(t);
+        }
+        Object.assign(resp, { id_token });
+      }
+
+
+      reply.send(Object.assign(tokens, { token_type: "Bearer", expires_in: config.access_token_exp, scope: auth_req.scope }));
+      return reply;
+    }
+    case "refresh_token": {
+      break;
+    }
+    default:
+      break;
   }
-
-  let [valid, verr] = await verify_code_challenge(auth_req, code_verifier);
-  if (verr) {
-    return verr.build(t);
-  }
-
-  let [key] = keystore.all({ use: 'sig' });
-
-  let [id_token, iterr] = await gen_id_token(auth_req, key);
-  if (iterr) {
-    return iterr.build(t);
-  }
-
-  let [tokens, aterr] = await gen_tokens(auth_req, key);
-  if (aterr) {
-    return aterr.build(t);
-  }
-
-  let [_, uperr] = await update_auth_req(auth_req.id, { used: true });
-
-  if (uperr) {
-    return uperr.build(t);
-  }
-
-  reply.send({
-    id_token,
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-    token_type: "Bearer",
-    expires_in: config.access_token_exp,
-    scope: auth_req.scope
-  });
-  return reply;
 }
 
 export async function handle_get_jwks(req, reply) {
