@@ -28,5 +28,6 @@
   "invalid_code_verifier": "Неверный верификатор кода",
   "invalid_auth_method": "Недопустимый метод аутентификации, этот клиент настроен на использование аутентификации {{method}}",
   "invalid_client_credentials": "Неверные учетные данные клиента",
-  "invalid_grant_type": "Недопустимый grant_type, используйте один из следующих: authorization_code, refresh_token"
+  "invalid_grant_type": "Недопустимый grant_type, используйте один из следующих: authorization_code, refresh_token",
+  "token_expired": "Токен просрочен или неактивен"
 }

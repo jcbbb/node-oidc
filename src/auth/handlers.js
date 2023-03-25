@@ -3,7 +3,7 @@ import path from "path";
 import jose from "node-jose";
 import config from "../config/index.js";
 import { get_client, get_valid_client_scopes, get_valid_redirect_uri, get_verified_client, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
-import { gen_id_token, gen_tokens, get_auth_req, insert_auth_req, insert_session, update_auth_req, verify_code_challenge, verify_credentials } from "./services.js";
+import { gen_tokens, get_auth_req, get_auth_req_by_id, get_refresh_token, insert_auth_req, insert_session, update_auth_req, update_refresh_token, verify_code_challenge, verify_credentials } from "./services.js";
 import { get_users_by_ids, insert_user } from "../user/services.js";
 import { ValidationError } from "../utils/errors.js";
 import { keystore } from "../utils/jwks.js";
@@ -199,7 +199,6 @@ export async function handle_token(req, reply) {
       }
 
       let [valid, verr] = await verify_code_challenge(auth_req, code_verifier);
-
       if (verr) {
         return verr.build(t);
       }
@@ -212,35 +211,38 @@ export async function handle_token(req, reply) {
       }
 
       let [_, uperr] = await update_auth_req(auth_req.id, { used: true });
-
       if (uperr) {
         return uperr.build(t);
       }
 
-      let resp = {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_type: "Bearer",
-        expires_in: config.access_token_exp,
-        scope: auth_req.scope
-      };
-
-      let scopes = auth_req.scope.split(" ");
-
-      if (scopes.includes("openid")) {
-        let [id_token, iterr] = await gen_id_token(auth_req, key);
-        if (iterr) {
-          return iterr.build(t);
-        }
-        Object.assign(resp, { id_token });
-      }
-
-
       reply.send(Object.assign(tokens, { token_type: "Bearer", expires_in: config.access_token_exp, scope: auth_req.scope }));
       return reply;
     }
+
     case "refresh_token": {
-      break;
+      let [token, err] = await get_refresh_token(refresh_token);
+      if (err)  {
+        return err.build(t);
+      }
+
+      let [auth_req, aerr] = await get_auth_req_by_id(token.auth_req_id);
+      if (aerr) {
+        return aerr.build(t);
+      }
+
+      let [key] = keystore.all({ use: "sig" });
+      let [tokens, terr] = await gen_tokens(auth_req, key);
+      if (terr) {
+        return terr.build(t);
+      }
+
+      let [_, uperr] = await update_refresh_token(refresh_token, { active: false });
+      if (uperr) {
+        return uperr.build(t);
+      }
+
+      reply.send(Object.assign(tokens, { token_type: "Bearer", expires_in: config.access_token_exp, scope: auth_req.scope }));
+      return reply;
     }
     default:
       break;

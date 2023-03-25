@@ -4,7 +4,7 @@ import { pool } from "../db/pool.js";
 import { hash } from "argon2";
 import { option } from "../utils/index.js";
 import { get_user_by_email, get_user_by_id, get_user_by_phone } from "../user/services.js";
-import { BadRequestError, InternalError, ResourceNotFoundError } from "../utils/errors.js";
+import { AuthorizationError, BadRequestError, InternalError, ResourceNotFoundError } from "../utils/errors.js";
 import { randomInt, createHash } from "crypto";
 
 export async function insert_session(user_id, remote_addr) {
@@ -209,15 +209,44 @@ export async function verify_code_challenge(auth_req, code_verifier) {
   return [false, new BadRequestError({ key: "invalid_code_verifier" })];
 }
 
-export async function get_refresh_token(id) {
-  let [ref, rerr] = await option(pool.query("select * from refresh_tokens where id = $1", id));
-  if (!rerr) {
-    return [null, new InternalError()];
-  }
-
-  let [token, err] = await option(pool.query("select * from tokes where id = $1", ref.rows[0].token_id));
+export async function get_auth_req_by_id(id) {
+  let [result, err] = await option(pool.query("select * from authorization_requests where id = $1", [id]));
 
   if (err) {
     return [null, new InternalError()];
   }
+
+  if (!result.rows.length) {
+    return [null, new ResourceNotFoundError()];
+  }
+
+  return [result.rows[0], null];
+}
+
+export async function get_refresh_token(id) {
+  let [result, err] = await option(pool.query("select * from refresh_tokens where id = $1", [id]));
+
+  if (err) {
+    return [null, new InternalError()];
+  }
+
+  if (!result.rows.length) {
+    return [null, new ResourceNotFoundError()];
+  }
+
+  if (!result.rows[0].active) {
+    return [null, new AuthorizationError({ key: "token_expired" })];
+  }
+
+  return [result.rows[0], null];
+}
+
+export async function update_refresh_token(id, { active = true }) {
+  let [result, err] = await option(pool.query("update refresh_tokens set active = $1 where id = $2", [active, id]));
+
+  if (err) {
+    return [null, new InternalError()];
+  }
+
+  return [result.rows[0], null];
 }
