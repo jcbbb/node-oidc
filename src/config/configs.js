@@ -15,7 +15,10 @@ import {
   ID_TOKEN_EXP,
   ISSUER,
   ISSUER_DEV,
-  ISSUER_STAGING
+  ISSUER_STAGING,
+  ORIGIN,
+  ORIGIN_DEV,
+  ORIGIN_STAGING
 } from "./secrets.js";
 
 export let configs = {
@@ -28,7 +31,8 @@ export let configs = {
     jwks_file_name: JWKS_FILE_NAME,
     issuer: ISSUER,
     access_token_exp: ACCESS_TOKEN_EXP,
-    id_token_exp: ID_TOKEN_EXP
+    id_token_exp: ID_TOKEN_EXP,
+    origin: ORIGIN
   },
   development: {
     port: PORT_DEV,
@@ -39,7 +43,8 @@ export let configs = {
     jwks_file_name: JWKS_FILE_NAME,
     issuer: ISSUER_DEV,
     access_token_exp: ACCESS_TOKEN_EXP,
-    id_token_exp: ID_TOKEN_EXP
+    id_token_exp: ID_TOKEN_EXP,
+    origin: ORIGIN_DEV
   },
   staging: {
     port: PORT_STAGING,
@@ -50,6 +55,7 @@ export let configs = {
     jwks_file_name: JWKS_FILE_NAME,
     issuer: ISSUER_STAGING,
     access_token_exp: ACCESS_TOKEN_EXP,
-    id_token_exp: ID_TOKEN_EXP
+    id_token_exp: ID_TOKEN_EXP,
+    origin: ORIGIN_STAGING
   },
 };

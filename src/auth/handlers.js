@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-import jose from "node-jose";
 import config from "../config/index.js";
 import { get_client, get_valid_client_scopes, get_valid_redirect_uri, get_verified_client, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
 import { gen_tokens, get_auth_req, get_auth_req_by_id, get_refresh_token, insert_auth_req, insert_session, update_auth_req, update_refresh_token, verify_code_challenge, verify_credentials } from "./services.js";
@@ -188,6 +185,7 @@ export async function handle_token(req, reply) {
 
   let [client, cerr] = await get_verified_client(client_id, client_secret, req.headers["authorization"]);
   if (cerr) {
+    reply.code(cerr.status_code);
     return cerr.build(t);
   }
 
@@ -195,11 +193,13 @@ export async function handle_token(req, reply) {
     case "authorization_code": {
       let [auth_req, err] = await get_auth_req({ client_id: client.id, code, redirect_uri });
       if (err) {
+        reply.code(err.status_code);
         return err.build(t);
       }
 
       let [valid, verr] = await verify_code_challenge(auth_req, code_verifier);
       if (verr) {
+        reply.code(verr.status_code);
         return verr.build(t);
       }
 
@@ -207,11 +207,13 @@ export async function handle_token(req, reply) {
 
       let [tokens, aterr] = await gen_tokens(auth_req, key);
       if (aterr) {
+        reply.code(aterr.status_code);
         return aterr.build(t);
       }
 
       let [_, uperr] = await update_auth_req(auth_req.id, { used: true });
       if (uperr) {
+        reply.code(uperr.status_code);
         return uperr.build(t);
       }
 
@@ -222,22 +224,26 @@ export async function handle_token(req, reply) {
     case "refresh_token": {
       let [token, err] = await get_refresh_token(refresh_token);
       if (err)  {
+        reply.code(err.status_code);
         return err.build(t);
       }
 
       let [auth_req, aerr] = await get_auth_req_by_id(token.auth_req_id);
       if (aerr) {
+        reply.code(aerr.status_code);
         return aerr.build(t);
       }
 
       let [key] = keystore.all({ use: "sig" });
       let [tokens, terr] = await gen_tokens(auth_req, key);
       if (terr) {
+        reply.code(terr.code);
         return terr.build(t);
       }
 
       let [_, uperr] = await update_refresh_token(refresh_token, { active: false });
       if (uperr) {
+        reply.code(uperr.code);
         return uperr.build(t);
       }
 
@@ -251,4 +257,42 @@ export async function handle_token(req, reply) {
 
 export async function handle_get_jwks(req, reply) {
   return keystore.toJSON();
+}
+
+export async function handle_oidc_config(req, reply) {
+  reply.send({
+    issuer: config.issuer,
+    authorization_endpoint: config.origin + "/oauth/authorize",
+    token_endpoint: config.origin + "/oauth/token",
+    userinfo_endpoint: config.origin + "/userinfo",
+    jwks_uri: config.origin + "/oauth/jwks",
+    response_types_supported: ["code", "token"],
+    subject_types_supported: ["public"],
+    id_token_signing_alg_values_supported: ["RS256"],
+    scopes_supported: ["openid", "profile"],
+    token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"],
+    claims_supported: [
+      "aud",
+      "email",
+      "email_verified",
+      "exp",
+      "family_name",
+      "given_name",
+      "iat",
+      "iss",
+      "picture",
+      "name",
+      "sub"
+    ],
+    code_challenge_methods_supported: ["plain", "S256"],
+    grant_types_supported: ["authorization_code", "refresh_token"]
+  });
+
+  return reply;
+}
+
+export async function handle_userinfo(req, reply) {
+  // not imlemented yet
+  reply.send("NOT IMPLEMENTED");
+  return reply;
 }

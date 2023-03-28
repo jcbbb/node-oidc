@@ -1,4 +1,26 @@
 export const auth_schema = {
+  oidc_config: {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          issuer: { type: "string" },
+          authorization_endpoint: { type: "string" },
+          token_endpoint: { type: "string" },
+          userinfo_endpoint: { type: "string" },
+          jwks_uri: { type: "string" },
+          response_types_supported: { type: "array" },
+          subject_types_supported: { type: "array" },
+          id_token_signing_alg_values_supported: { type: "array" },
+          scopes_supported: { type: "array" },
+          token_endpoint_auth_methods_supported: { type: "array" },
+          claims_supported: { type: "array" },
+          code_challenge_methods_supported: { type: "array" },
+          grant_types_supported: { type: "array" }
+        }
+      }
+    }
+  },
   consent_view: {
     query: {
       type: "object",
@@ -34,6 +56,19 @@ export const auth_schema = {
     }
   },
   token: {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          access_token: { type: "string" },
+          refresh_token: { type: "string" },
+          id_token: { type: "string" },
+          token_type: { type: "string" },
+          expires_in: { type: "integer" },
+          scope: { type: "string" }
+        }
+      }
+    },
     body: {
       type: "object",
       properties: {

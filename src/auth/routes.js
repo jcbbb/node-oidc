@@ -7,7 +7,9 @@ import {
   handle_login,
   handle_consent,
   handle_token,
-  handle_get_jwks
+  handle_get_jwks,
+  handle_oidc_config,
+  handle_userinfo
 } from "./handlers.js";
 import { auth_schema } from "./schema.js";
 
@@ -59,6 +61,17 @@ export let auth_routes = (fastify, _, done) => {
     method: "GET",
     url: "/oauth/jwks",
     handler: handle_get_jwks,
+  });
+  fastify.route({
+    method: "GET",
+    url: "/userinfo",
+    handler: handle_userinfo,
+  });
+  fastify.route({
+    method: "GET",
+    url: "/.well-known/openid-configuration",
+    handler: handle_oidc_config,
+    schema: auth_schema.oidc_config
   });
 
   done();

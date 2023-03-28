@@ -20,5 +20,8 @@ export let {
   JWKS_FILE_NAME,
   ISSUER,
   ISSUER_DEV,
-  ISSUER_STAGING
+  ISSUER_STAGING,
+  ORIGIN,
+  ORIGIN_DEV,
+  ORIGIN_STAGING
 } = process.env;
