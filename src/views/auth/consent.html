@@ -39,5 +39,9 @@
       </li>
     </ul>
     <% } %>
+    <p class="text-gray-700 text-sm">
+      The application "<%= it.client.name %>" will be given access to your details: name, email address and profile picture.
+      Before you start working with app <%= it.client.name %>, you can view its <a class="text-blue-600 font-medium" href="<%= it.client.policy_uri %>">privacy policy</a> and <a class="text-blue-600 font-medium" href="<%= it.client.tos_uri %>">terms of use</a>
+    </p>
   </div>
 </div>

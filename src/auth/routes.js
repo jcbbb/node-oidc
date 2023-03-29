@@ -9,7 +9,8 @@ import {
   handle_token,
   handle_get_jwks,
   handle_oidc_config,
-  handle_userinfo
+  handle_userinfo,
+  handle_consent_summary
 } from "./handlers.js";
 import { auth_schema } from "./schema.js";
 
@@ -40,6 +41,11 @@ export let auth_routes = (fastify, _, done) => {
     handler: handle_consent_view,
     schema: auth_schema.consent_view,
     attachValidation: true,
+  });
+  fastify.route({
+    method: "GET",
+    url: "/oauth/consent-summary",
+    handler: handle_consent_summary
   });
   fastify.route({
     method: "POST",

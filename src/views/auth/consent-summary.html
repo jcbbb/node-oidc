@@ -1,16 +1,40 @@
 <% layout('../layout.html', it) %>
 <div class="h-screen flex items-center justify-center">
   <div class="max-w-md mx-auto rounded-md bg-white p-6 space-y-6 w-full">
-    <div>
-      <h1 class="text-2xl font-semibold text-gray-900"><%= it.client.name %> needs rights to access your account</h1>
-      <span>display choosen account here</span>
+    <div class="space-y-2">
+      <h1 class="text-2xl font-semibold text-gray-900">The application "<%= it.client.name %>" needs access rights to your account</h1>
+      <div class="flex items-center space-x-2">
+        <div class="w-6 h-6">
+          <img src="<%= it.user.picture %>" alt="" class="flex-shrink-0 w-full rounded-full object-cover" />
+        </div>
+        <span class="text-gray-600 text-xs font-medium"><%= it.user.email %></span>
+      </div>
     </div>
     <%~ await includeFile('../flash.html', it) %>
-    <p>Choose what permissions you want to grant the application <span class="text-blue-600"><%= it.client.name %></span></p>
-    <ul>
-      <% it.valid_scopes.forEach(function (scope) { %>
-        <li><%= scope.description %></li>
-      <% }) %>
-    </ul>
+    <div class="space-y-2">
+      <h3 class="text-gray-900 font-medium">Choose what permissions you want to grant the application "<%= it.client.name %>"</h3>
+      <form method="post" class="space-y-4">
+        <ul>
+          <% it.valid_scopes.forEach(function (scope) { %>
+            <% if (scope.sensitive) { %>
+              <li>
+                <label class="flex items-center py-2 cursor-pointer">
+                  <span class="w-2.5 h-2.5 bg-yellow-500 inline-block rounded-full">
+                  </span>
+                  <span class="ml-4 text-gray-700">
+                    <%= scope.description %>
+                  </span>
+                  <input type="checkbox" name="selected_scopes" value="<%= scope.key %>" class="ml-auto"/>
+                </label>
+              </li>
+            <% }%>
+          <% }) %>
+        </ul>
+        <div class="flex space-x-2">
+          <button class="flex-1 text-yellow-900 px-4 py-2 rounded-md border border-yellow-500 hover:bg-yellow-50 duration-200">Cancel</button>
+          <button class="flex-1 text-yellow-900 px-4 py-2 rounded-md border border-yellow-500 hover:bg-yellow-50 duration-200">Continue</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

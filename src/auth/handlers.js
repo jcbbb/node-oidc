@@ -1,7 +1,7 @@
 import config from "../config/index.js";
 import { get_client, get_valid_client_scopes, get_valid_redirect_uri, get_verified_client, is_valid_client_scope, is_valid_response_type } from "../client/services.js";
 import { gen_tokens, get_auth_req, get_auth_req_by_id, get_refresh_token, insert_auth_req, insert_session, update_auth_req, update_refresh_token, verify_code_challenge, verify_credentials } from "./services.js";
-import { get_users_by_ids, insert_user } from "../user/services.js";
+import { get_users_by_ids, get_user_by_id, insert_user } from "../user/services.js";
 import { ValidationError } from "../utils/errors.js";
 import { keystore } from "../utils/jwks.js";
 
@@ -156,7 +156,9 @@ export async function handle_consent(req, reply) {
   let has_sensitive_scopes = valid_scopes.some((scope) => scope.sensitive);
 
   if (has_sensitive_scopes) {
-    reply.redirect("/oauth/consentsummary");
+    let query = req.url.slice(req.url.indexOf("?"));
+    req.session.set("suid", user_id);
+    reply.redirect(`/oauth/consent-summary${query}`);
     return reply;
   }
 
@@ -176,6 +178,36 @@ export async function handle_consent(req, reply) {
   }
 
   reply.redirect(uri);
+  return reply;
+}
+
+export async function handle_consent_summary(req, reply) {
+  let { client_id, code_challenge, code_challenge_method, response_type, state, scope } = req.query;
+  let user_id = req.session.get("suid");
+  let t = req.t;
+
+  let [user, uerr] = await get_user_by_id(user_id);
+  if (uerr) {
+    reply.redirect(`/oauth/error?err=${uerr.b64(t)}`);
+    return reply;
+  }
+
+  let [client, cerr] = await get_client(client_id);
+
+  if (cerr) {
+    reply.redirect(`/oauth/error?err=${cerr.b64(t)}`);
+    return reply;
+  }
+
+  let [valid_scopes, err] = await get_valid_client_scopes(scope, client_id);
+
+  if (err) {
+    req.flash("err", err.build(t));
+    reply.redirect(req.url);
+    return reply;
+  }
+
+  reply.render("auth/consent-summary", { client, valid_scopes, user });
   return reply;
 }
 
