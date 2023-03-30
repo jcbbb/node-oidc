@@ -205,7 +205,12 @@ export async function handle_consent_summary(req, reply) {
     return reply;
   }
 
-  reply.render("auth/consent-summary", { client, valid_scopes, user });
+  reply.render("auth/consent-summary", {
+    title: "Choose permissions",
+    client,
+    valid_scopes,
+    user
+  });
   return reply;
 }
 
