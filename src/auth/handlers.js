@@ -140,10 +140,8 @@ export async function handle_consent_view(req, reply) {
 
 export async function handle_consent(req, reply) {
   let { client_id, code_challenge, code_challenge_method = "plain", response_type, state, scope } = req.query;
-  let { uidx, redirect_uri } = req.body;
+  let { user_id, redirect_uri } = req.body;
   let t = req.t;
-  let uids = (req.session.get("uids") || "").split("|").filter(Boolean);
-  let user_id = uids[uidx];
 
   let [valid_scopes, err] = await get_valid_client_scopes(scope, client_id);
 

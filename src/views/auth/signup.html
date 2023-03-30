@@ -1,6 +1,6 @@
 <% layout('../layout.html', it) %>
 <div class="h-screen flex items-center justify-center">
-  <div class="max-w-md mx-auto rounded-md bg-white p-6 space-y-6 w-full">
+  <div class="max-w-md mx-auto rounded-md bg-white px-8 py-12 space-y-6 w-full">
     <h1 class="text-2xl font-semibold">Signup</h1>
     <%~ await includeFile('../flash.html', it) %>
     <form method="post" id="" action="/users?err_to=/users/new&redirect_uri=/" class="flex flex-col space-y-4">
