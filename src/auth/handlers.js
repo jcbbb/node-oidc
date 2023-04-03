@@ -179,8 +179,8 @@ export async function handle_consent(req, reply) {
   return reply;
 }
 
-export async function handle_consent_summary(req, reply) {
-  let { client_id, code_challenge, code_challenge_method, response_type, state, scope } = req.query;
+export async function handle_consent_summary_view(req, reply) {
+  let { client_id, code_challenge, code_challenge_method, response_type, state, scope, redirect_uri } = req.query;
   let user_id = req.session.get("suid");
   let t = req.t;
 
@@ -205,14 +205,59 @@ export async function handle_consent_summary(req, reply) {
     return reply;
   }
 
+  let [valid_redirect_uri, vrerr] = await get_valid_redirect_uri(redirect_uri, client_id);
+  if (vrerr) {
+    req.flash("err", vrerr.build(t));
+    reply.redirect(req.url);
+    return reply;
+  }
+
   reply.render("auth/consent-summary", {
     title: "Choose permissions",
     client,
     valid_scopes,
-    user
+    user,
+    valid_redirect_uri
   });
+
   return reply;
 }
+
+export async function handle_consent_summary(req, reply) {
+  let { client_id, code_challenge, code_challenge_method = "plain", response_type, state } = req.query;
+  let { selected_scopes, redirect_uri, _action } = req.body;
+  let user_id = req.session.get("suid");
+  let t = req.t;
+
+  if (_action === "cancel") {
+    let uri = `${redirect_uri}?error=access_denied`;
+    if (state) {
+      uri += `&state=${state}`;
+    }
+    reply.redirect(uri);
+    return reply;
+  }
+
+  let scope = selected_scopes;
+  if (Array.isArray(selected_scopes)) {
+    scope = selected_scopes.join(" ");
+  }
+
+  let [auth_req, aerr] = await insert_auth_req({ client_id, code_challenge, code_challenge_method, response_type, state, scope, user_id, redirect_uri });
+  if (aerr) {
+    return aerr.build(t);
+  }
+
+  let uri = `${redirect_uri}?code=${auth_req.code}`;
+
+  if (state) {
+    uri += `&state=${state}`;
+  }
+
+  reply.redirect(uri);
+  return reply;
+}
+
 
 export async function handle_token(req, reply) {
   let t = req.t;
